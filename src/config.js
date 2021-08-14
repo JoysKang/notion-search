@@ -10,6 +10,12 @@ const configs = [
         "description": 'spaceId 未配置',
         "icon":''
 
+    },
+    {
+        "title": "useDesktopClient",
+        "description": 'useDesktopClient 未配置',
+        "icon":''
+
     }
 ]
 

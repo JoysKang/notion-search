@@ -30,13 +30,14 @@ async function search(searchWord) {
     const results = json_data.results
     const block = json_data.recordMap.block
     const collection = json_data.recordMap.collection
+    const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
+    let link = useDesktopClient === "true" ? "notion://www.notion.so/" : "https://www.notion.so/"
 
     for (let i = 0; i <= results.length; i++) {
         const item = results[i]
         let title = ""
         let description = ""
         let icon = "icon.png"
-        let link = "https://www.notion.so/"
 
         if (item === undefined) {
             continue
@@ -91,6 +92,10 @@ let NSet = {
             const spaceId = utools.dbStorage.getItem("spaceId")
             if (spaceId && spaceId.length) {
                 config.configs[1].description = spaceId
+            }
+            const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
+            if (useDesktopClient && useDesktopClient.length) {
+                config.configs[2].description = useDesktopClient
             }
 
             callbackSetList(config.configs);
