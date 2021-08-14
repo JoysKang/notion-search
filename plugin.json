@@ -1,0 +1,25 @@
+{
+  "pluginName": "Notion search",
+  "version": "0.0.1",
+  "description": "Notion 搜索",
+  "author": "Joys",
+  "homepage": "https://github.com/JoysKang/notion-search",
+  "preload": "src/preload.js",
+  "logo": "logo.png",
+  "features": [
+    {
+      "code": "NSet",
+      "explain": "Notion 搜索配置",
+      "cmds": [
+        "NSet"
+      ]
+    },
+    {
+      "code": "NS",
+      "explain": "Notion 搜索",
+      "cmds": [
+        "NS"
+      ]
+    }
+  ]
+}
