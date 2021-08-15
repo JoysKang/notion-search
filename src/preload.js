@@ -1,8 +1,44 @@
 const config = require("./config");
 const fetch = require('node-fetch');
 const {exec} = require("child_process");
+const emojiUnicode = require("emoji-unicode")
 
 let value = ""  // setting 时，记录用户输入的值
+
+
+function isEmojiCharacter(substring) {
+    for ( let i = 0; i < substring.length; i++) {
+        let hs = substring.charCodeAt(i);
+        if (0xd800 <= hs && hs <= 0xdbff) {
+            if (substring.length > 1) {
+                const ls = substring.charCodeAt(i + 1);
+                const uc = ((hs - 0xd800) * 0x400) + (ls - 0xdc00) + 0x10000;
+                if (0x1d000 <= uc && uc <= 0x1f77f) {
+                    return true;
+                }
+            }
+        } else if (substring.length > 1) {
+            const ls = substring.charCodeAt(i + 1);
+            if (ls === 0x20e3) {
+                return true;
+            }
+        } else {
+            if (0x2100 <= hs && hs <= 0x27ff) {
+                return true;
+            } else if (0x2B05 <= hs && hs <= 0x2b07) {
+                return true;
+            } else if (0x2934 <= hs && hs <= 0x2935) {
+                return true;
+            } else if (0x3297 <= hs && hs <= 0x3299) {
+                return true;
+            } else if (hs === 0xa9 || hs === 0xae || hs === 0x303d || hs === 0x3030
+                || hs === 0x2b55 || hs === 0x2b1c || hs === 0x2b1b
+                || hs === 0x2b50) {
+                return true;
+            }
+        }
+    }
+}
 
 
 // 根据 id、parent_id 找到第一个 type 为 page 的对象
@@ -11,7 +47,10 @@ function getTitle(block, id) {
         const title = block[id].value.properties.title[0][0]
         let icon = "icon.png"
         if (block[id].value.format && block[id].value.format.page_icon) {
-            icon = block[id].value.format.page_icon
+            const page_icon = block[id].value.format.page_icon
+            if (isEmojiCharacter(page_icon)) {
+                icon = "emojiicons/" + emojiUnicode(page_icon) + ".png"
+            }
         }
         return [title, icon];
     } else {
@@ -44,7 +83,6 @@ async function search(searchWord) {
     const json_data = await response.json()
     const results = json_data.results
     const block = json_data.recordMap.block
-    const collection = json_data.recordMap.collection
     const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
     let link = useDesktopClient === "true" ? "notion://www.notion.so/" : "https://www.notion.so/"
 
