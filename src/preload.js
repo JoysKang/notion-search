@@ -4,6 +4,21 @@ const {exec} = require("child_process");
 
 let value = ""  // setting 时，记录用户输入的值
 
+
+// 根据 id、parent_id 找到第一个 type 为 page 的对象
+function getTitle(block, id) {
+    if (block[id].value.type === "page") {
+        const title = block[id].value.properties.title[0][0]
+        let icon = "icon.png"
+        if (block[id].value.format && block[id].value.format.page_icon) {
+            icon = block[id].value.format.page_icon
+        }
+        return [title, icon];
+    } else {
+        return getTitle(block, block[id].value.parent_id)
+    }
+}
+
 async function search(searchWord) {
     const searchResult = []
     const cookie = utools.dbStorage.getItem("cookie")
@@ -35,45 +50,39 @@ async function search(searchWord) {
 
     for (let i = 0; i <= results.length; i++) {
         const item = results[i]
-        let title = ""
-        let description = ""
-        let icon = "icon.png"
+        let obj = {
+            "title": "",
+            "description": "",
+            "icon": "icon.png",
+            "parent_id": "",
+            "link": "",
+            "id": ""
+        }
 
         if (item === undefined) {
             continue
         }
 
-        const id = item.id
-        link = link + id.replaceAll("-", "")
+        obj.id = item.id
+        obj.link = link + obj.id.replaceAll("-", "")
 
-        // title
-        try {
-            title = block[id].value.properties.title[0][0]
-        } catch (e) {
-            if (e.toString().indexOf("title") !== -1) {
-                title = collection[block[id].value.collection_id].value.name[0][0]
+        // description
+        if (item.highlight) {
+            if (item.highlight.pathText) {
+                obj.description = item.highlight.pathText.replaceAll("<gzkNfoUU>", "").replaceAll("</gzkNfoUU>", "")
+            } else if (item.highlight.text) {
+                obj.description = item.highlight.text.replaceAll("<gzkNfoUU>", "").replaceAll("</gzkNfoUU>", "")
             }
         }
 
-        // 图标
+        // title（第一个 type 为 page 的对象）
         try {
-            icon = block[id].value.format.page_cover !== undefined ? "https://www.notion.so" + block[id].value.format.page_cover : "icon.png"
+            [obj.title, obj.icon] = getTitle(block, obj.id)
         } catch (e) {
             console.log(e)
         }
 
-        if (item.highlight.pathText) {
-            description = item.highlight.pathText.replaceAll("<gzkNfoUU>", "").replaceAll("</gzkNfoUU>", "")
-        }
-
-        searchResult.push(
-            {
-                "title": title,
-                "description": description,
-                "icon": icon,
-                "link": link
-            }
-        )
+        searchResult.push(obj)
     }
     // console.log(searchResult, "///")
     return searchResult
