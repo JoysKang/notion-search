@@ -72,6 +72,7 @@ async function search(searchWord) {
     const searchResult = []
     const cookie = utools.dbStorage.getItem("cookie")
     const spaceId = utools.dbStorage.getItem("spaceId")
+    // console.time('test2')
     const response = await fetch("https://www.notion.so/api/v3/search", {
         "headers": {
             "accept": "*/*",
@@ -91,6 +92,7 @@ async function search(searchWord) {
         "mode": "cors"
     });
     let jsonData = await response.json()
+    // console.timeEnd('test2')
     const results = jsonData.results
     const recordMap = jsonData.recordMap
     const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
@@ -198,15 +200,15 @@ let NS = {
         select: async (action, itemData, callbackSetList) => {
             if (itemData.icon === "logo.png") { // 搜索
                 callbackSetList([]);
+                // console.time('test1')
                 const searchResult = await search(itemData.title)
+                // console.timeEnd('test1')
                 callbackSetList(searchResult);
                 return;
             }
 
-            // notion app 打开
-            // 浏览器打开
-
-            let command = `open ${itemData.link}`;
+            // 打开
+            const command = `open ${itemData.link}`;
             exec(command, (err) => {
                 if (err) utools.showNotification(err);
             });
