@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const {exec} = require("child_process");
 const emojiUnicode = require("emoji-unicode")
 
-let value = ""  // setting 时，记录用户输入的值
+let input = ""  // setting 时，记录用户输入的值
 
 
 function isEmojiCharacter(substring) {
@@ -41,21 +41,31 @@ function isEmojiCharacter(substring) {
 }
 
 
-// 根据 id、parent_id 找到第一个 type 为 page 的对象
-function getTitle(block, id) {
-    if (block[id].value.type === "page") {
-        const title = block[id].value.properties.title[0][0]
-        let icon = "icon.png"
-        if (block[id].value.format && block[id].value.format.page_icon) {
-            const page_icon = block[id].value.format.page_icon
+function getTitle(recordMap, id) {
+    let icon = "icon.png"
+    const value = recordMap.block[id].value.value
+    const collection_id = value.collection_id
+    if (collection_id) {
+        const collectionValue = recordMap.collection[value.collection_id].value.value
+        const title = collectionValue.name[0][0]
+        icon = collectionValue.icon
+        if (isEmojiCharacter(icon)) {
+            icon = "emojiicons/" + emojiUnicode(icon) + ".png"
+        }
+        return [title, icon];
+    }
+    const parent_id = value.parent_id
+    if (parent_id && value.type === "page") {
+        const title = value.properties.title[0][0]
+        if (value.format && value.format.page_icon) {
+            const page_icon = value.format.page_icon
             if (isEmojiCharacter(page_icon)) {
                 icon = "emojiicons/" + emojiUnicode(page_icon) + ".png"
             }
         }
         return [title, icon];
-    } else {
-        return getTitle(block, block[id].value.parent_id)
     }
+    return getTitle(recordMap, value.parent_id)
 }
 
 async function search(searchWord) {
@@ -80,9 +90,9 @@ async function search(searchWord) {
         "method": "POST",
         "mode": "cors"
     });
-    const json_data = await response.json()
-    const results = json_data.results
-    const block = json_data.recordMap.block
+    let jsonData = await response.json()
+    const results = jsonData.results
+    const recordMap = jsonData.recordMap
     const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
     let link = useDesktopClient === "true" ? "notion://www.notion.so/" : "https://www.notion.so/"
 
@@ -115,7 +125,7 @@ async function search(searchWord) {
 
         // title（第一个 type 为 page 的对象）
         try {
-            [obj.title, obj.icon] = getTitle(block, obj.id)
+            [obj.title, obj.icon] = getTitle(recordMap, obj.id)
         } catch (e) {
             console.log(e)
         }
@@ -149,14 +159,14 @@ let NSet = {
         },
 
         search: (action, searchWord, callbackSetList) => {
-            value = searchWord
+            input = searchWord
             callbackSetList(config.configs);
         },
 
         select: (action, itemData) => {
             // 记录搜索框的值到指定的选择项
-            if (!value) return;
-            utools.dbStorage.setItem(itemData.title, value) // 记录到数据库
+            if (!input) return;
+            utools.dbStorage.setItem(itemData.title, input) // 记录到数据库
             utools.showNotification(itemData.title + "设置成功！");
 
             utools.outPlugin();     // 关闭插件
