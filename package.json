@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "node-fetch": "^2.6.1",
-    "emoji-unicode": "^2.0.1"
+    "emoji-unicode": "^2.0.1",
+    "node-fetch": "^2.6.1"
   }
 }

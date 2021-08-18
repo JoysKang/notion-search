@@ -16,6 +16,12 @@ const configs = [
         "description": 'useDesktopClient 未配置',
         "icon":''
 
+    },
+    {
+        "title": "notionPathWin",
+        "description": 'notionPathWin 未配置',
+        "icon":''
+
     }
 ]
 

@@ -68,6 +68,7 @@ function getTitle(recordMap, id) {
     return getTitle(recordMap, value.parent_id)
 }
 
+
 async function search(searchWord) {
     const searchResult = []
     const cookie = utools.dbStorage.getItem("cookie")
@@ -156,6 +157,10 @@ let NSet = {
             if (useDesktopClient && useDesktopClient.length) {
                 config.configs[2].description = useDesktopClient
             }
+            const notionPathWin = utools.dbStorage.getItem("notionPathWin")
+            if (notionPathWin && notionPathWin.length) {
+                config.configs[3].description = notionPathWin
+            }
 
             callbackSetList(config.configs);
         },
@@ -207,14 +212,32 @@ let NS = {
                 return;
             }
 
-            // 打开
-            const command = `open ${itemData.link}`;
-            exec(command, (err) => {
-                if (err) utools.showNotification(err);
-            });
-
-            utools.outPlugin();     // 关闭插件
+            // 打开页面
             utools.hideMainWindow();    // 隐藏 uTools 窗口
+            let command = ""
+            if (utools.isMacOs()) {
+                command = `open ${itemData.link}`;
+            } else if (utools.isWindows()) {
+                const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
+                if (useDesktopClient === undefined || useDesktopClient === "flase") {    // 没有配置使用桌面app
+                    command = `start ${itemData.link}`;
+                } else {
+                    const notionPathWin = utools.dbStorage.getItem("notionPathWin")
+                    if (!notionPathWin) {
+                        utools.showNotification("Notion 应用路径未配置");
+                        utools.outPlugin();     // 关闭插件
+                    } else {
+                        command = `${notionPathWin} ${itemData.link}`
+                    }
+                }
+            }
+
+            if (command) {
+                exec(command, function (err, stdout , stderr) {
+                    if (err) utools.showNotification(err);
+                    utools.outPlugin();     // 关闭插件
+                });
+            }
         },
     },
 };
