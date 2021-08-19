@@ -227,7 +227,7 @@ let NS = {
                         utools.showNotification("Notion 应用路径未配置");
                         utools.outPlugin();     // 关闭插件
                     } else {
-                        command = `${notionPathWin} ${itemData.link}`
+                        command = `start /b ${notionPathWin} ${itemData.link}`
                     }
                 }
             }
