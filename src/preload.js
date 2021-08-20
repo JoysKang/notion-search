@@ -73,6 +73,11 @@ async function search(searchWord) {
     const searchResult = []
     const cookie = utools.dbStorage.getItem("cookie")
     const spaceId = utools.dbStorage.getItem("spaceId")
+    if (!cookie || !spaceId) {
+        utools.showNotification("cookie 或 spaceId 未配置");
+        return [];
+    }
+
     // console.time('test2')
     const response = await fetch("https://www.notion.so/api/v3/search", {
         "headers": {
@@ -135,6 +140,15 @@ async function search(searchWord) {
 
         searchResult.push(obj)
     }
+    if (searchResult.length === 0) {
+        searchResult.push({
+            title: '未查找到匹配项',
+            description: '请更换关键词后再查找',
+            icon:'emojiicons/1f62f.png',
+            id: '',
+            link: ''
+        })
+    }
     // console.log(searchResult, "///")
     return searchResult
 }
@@ -162,19 +176,34 @@ let NSet = {
                 config.configs[3].description = notionPathWin
             }
 
-            callbackSetList(config.configs);
+            if (utools.isMacOs() === true) {
+                callbackSetList(config.configs.filter(item => [1, 4].indexOf(item.system) !== -1))
+            } else if (utools.isWindows() === true) {
+                callbackSetList(config.configs.filter(item => [2, 4].indexOf(item.system) !== -1))
+            }
         },
 
         search: (action, searchWord, callbackSetList) => {
             input = searchWord
-            callbackSetList(config.configs);
+            if (utools.isMacOs() === true) {
+                callbackSetList(config.configs.filter(item => [1, 4].indexOf(item.system) !== -1))
+            } else if (utools.isWindows() === true) {
+                callbackSetList(config.configs.filter(item => [2, 4].indexOf(item.system) !== -1))
+            }
         },
 
         select: (action, itemData) => {
-            // 记录搜索框的值到指定的选择项
-            if (!input) return;
-            utools.dbStorage.setItem(itemData.title, input) // 记录到数据库
-            utools.showNotification(itemData.title + "设置成功！");
+            if (itemData.title === "clear") {  // 清除所有配置
+                for (let i = 0; i < config.configs.length; i++) {
+                    utools.dbStorage.removeItem(config.configs[i].title)
+                }
+                utools.showNotification("清理完成！");
+            } else {
+                // 记录搜索框的值到指定的选择项
+                if (!input) return;
+                utools.dbStorage.setItem(itemData.title, input) // 记录到数据库
+                utools.showNotification(itemData.title + "设置成功！");
+            }
 
             utools.outPlugin();     // 关闭插件
             utools.hideMainWindow();    // 隐藏 uTools 窗口
@@ -214,22 +243,30 @@ let NS = {
 
             // 打开页面
             utools.hideMainWindow();    // 隐藏 uTools 窗口
+            if (itemData.link === "") { // 未找到匹配项
+                utools.outPlugin();     // 关闭插件
+                return;
+            }
+
             let command = ""
             if (utools.isMacOs()) {
                 command = `open ${itemData.link}`;
             } else if (utools.isWindows()) {
-                const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
-                if (useDesktopClient === undefined || useDesktopClient === "flase") {    // 没有配置使用桌面app
-                    command = `start ${itemData.link}`;
-                } else {
-                    const notionPathWin = utools.dbStorage.getItem("notionPathWin")
-                    if (!notionPathWin) {
-                        utools.showNotification("Notion 应用路径未配置");
-                        utools.outPlugin();     // 关闭插件
-                    } else {
-                        command = `start /b ${notionPathWin} ${itemData.link}`
-                    }
-                }
+                command = `start ${itemData.link}`;
+
+                // 异步启动 windows Notion 存在进程无法结束的问题，暂时去掉
+                // const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
+                // if (useDesktopClient === undefined || useDesktopClient === "flase") {    // 没有配置使用桌面app
+                //     command = `start ${itemData.link}`;
+                // } else {
+                //     const notionPathWin = utools.dbStorage.getItem("notionPathWin")
+                //     if (!notionPathWin) {
+                //         utools.showNotification("Notion 应用路径未配置");
+                //         utools.outPlugin();     // 关闭插件
+                //     } else {
+                //         command = `start /b ${notionPathWin} ${itemData.link}`
+                //     }
+                // }
             }
 
             if (command) {
