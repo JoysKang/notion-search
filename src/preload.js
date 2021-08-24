@@ -42,7 +42,7 @@ function isEmojiCharacter(substring) {
 
 
 function getTitle(recordMap, id) {
-    let icon = "icon.png"
+    let icon = "static/icon.png"
     const value = recordMap.block[id].value.value
     const collection_id = value.collection_id
     if (collection_id) {
@@ -109,7 +109,7 @@ async function search(searchWord) {
         let obj = {
             "title": "",
             "description": "",
-            "icon": "icon.png",
+            "icon": "static/icon.png",
             "parent_id": "",
             "link": "",
             "id": ""

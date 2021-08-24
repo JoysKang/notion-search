@@ -9,16 +9,16 @@
    spaceId： Notion 的 spaceId   
    useDesktopClient：该配置目前仅在mac下显示，如果配置为 true 则会通过 notion 客户端打开页面,默认通过浏览器打开  
    具体获取见下图
-   ![](setting.png)
+   ![](static/setting.png)
    
 2. 设置配置，关键字 nset；  
    以 useDesktopClient 为例  
    a). 输入 nset，回车  
    b). 在子输入框，true，选中列表中的 useDesktopClient，然后回车，完成设置
-   ![](set.png)
+   ![](static/set.png)
    
 3. 使用关键词 ns ，在子输入框输入要查询的内容，按下 Enter 键，就可以执行搜索了, 如下图
-   ![](search.png)
+   ![](static/search.png)
 
 
 ### 注意
