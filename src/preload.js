@@ -1,9 +1,10 @@
-const config = require("./config");
+const {configs} = require("./config");
 const fetch = require('node-fetch');
 const {exec} = require("child_process");
 const emojiUnicode = require("emoji-unicode")
 
 let input = ""  // setting 时，记录用户输入的值
+let deepCopyConfigs = JSON.parse(JSON.stringify(configs))
 
 
 function isEmojiCharacter(substring) {
@@ -161,42 +162,43 @@ let NSet = {
             // 读取数据库的值，没有则返回默认值
             const cookie = utools.dbStorage.getItem("cookie")
             if (cookie && cookie.length) {
-                config.configs[0].description = cookie
+                deepCopyConfigs[0].description = cookie
             }
             const spaceId = utools.dbStorage.getItem("spaceId")
             if (spaceId && spaceId.length) {
-                config.configs[1].description = spaceId
+                deepCopyConfigs[1].description = spaceId
             }
             const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
             if (useDesktopClient && useDesktopClient.length) {
-                config.configs[2].description = useDesktopClient
+                deepCopyConfigs[2].description = useDesktopClient
             }
             const notionPathWin = utools.dbStorage.getItem("notionPathWin")
             if (notionPathWin && notionPathWin.length) {
-                config.configs[3].description = notionPathWin
+                deepCopyConfigs[3].description = notionPathWin
             }
 
             if (utools.isMacOs() === true) {
-                callbackSetList(config.configs.filter(item => [1, 4].indexOf(item.system) !== -1))
+                callbackSetList(deepCopyConfigs.filter(item => [1, 4].indexOf(item.system) !== -1))
             } else if (utools.isWindows() === true) {
-                callbackSetList(config.configs.filter(item => [2, 4].indexOf(item.system) !== -1))
+                callbackSetList(deepCopyConfigs.filter(item => [2, 4].indexOf(item.system) !== -1))
             }
         },
 
         search: (action, searchWord, callbackSetList) => {
             input = searchWord
             if (utools.isMacOs() === true) {
-                callbackSetList(config.configs.filter(item => [1, 4].indexOf(item.system) !== -1))
+                callbackSetList(deepCopyConfigs.filter(item => [1, 4].indexOf(item.system) !== -1))
             } else if (utools.isWindows() === true) {
-                callbackSetList(config.configs.filter(item => [2, 4].indexOf(item.system) !== -1))
+                callbackSetList(deepCopyConfigs.filter(item => [2, 4].indexOf(item.system) !== -1))
             }
         },
 
         select: (action, itemData) => {
             if (itemData.title === "clear") {  // 清除所有配置
-                for (let i = 0; i < config.configs.length; i++) {
-                    utools.dbStorage.removeItem(config.configs[i].title)
+                for (let i = 0; i < deepCopyConfigs.length; i++) {
+                    utools.dbStorage.removeItem(deepCopyConfigs[i].title)
                 }
+                deepCopyConfigs = JSON.parse(JSON.stringify(configs))
                 utools.showNotification("清理完成！");
             } else {
                 // 记录搜索框的值到指定的选择项
