@@ -1,10 +1,11 @@
 {
   "pluginName": "Notion search",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Notion 搜索",
   "author": "Joys",
   "homepage": "https://github.com/JoysKang/notion-search",
   "preload": "src/preload.js",
+  "platform": ["win32", "darwin"],
   "logo": "logo.png",
   "features": [
     {
