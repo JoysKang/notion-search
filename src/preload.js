@@ -254,21 +254,18 @@ let NS = {
             if (utools.isMacOs()) {
                 command = `open ${itemData.link}`;
             } else if (utools.isWindows()) {
-                command = `start ${itemData.link}`;
-
-                // 异步启动 windows Notion 存在进程无法结束的问题，暂时去掉
-                // const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
-                // if (useDesktopClient === undefined || useDesktopClient === "flase") {    // 没有配置使用桌面app
-                //     command = `start ${itemData.link}`;
-                // } else {
-                //     const notionPathWin = utools.dbStorage.getItem("notionPathWin")
-                //     if (!notionPathWin) {
-                //         utools.showNotification("Notion 应用路径未配置");
-                //         utools.outPlugin();     // 关闭插件
-                //     } else {
-                //         command = `start /b ${notionPathWin} ${itemData.link}`
-                //     }
-                // }
+                const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
+                if (useDesktopClient === null || useDesktopClient !== "true") {    // 没有配置使用桌面app
+                    command = `start ${itemData.link}`;
+                } else {
+                    const notionPathWin = utools.dbStorage.getItem("notionPathWin")
+                    if (!notionPathWin) {
+                        utools.showNotification("Notion 应用路径未配置");
+                        utools.outPlugin();     // 关闭插件
+                    } else {
+                        command = `powershell.exe -command "${notionPathWin} ${itemData.link}"`
+                    }
+                }
             }
 
             if (command) {
