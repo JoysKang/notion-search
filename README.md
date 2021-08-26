@@ -14,8 +14,11 @@
 2. 设置配置，关键字 nset；  
    以 useDesktopClient 为例  
    a). 输入 nset，回车  
-   b). 在子输入框，true，选中列表中的 useDesktopClient，然后回车，完成设置
+   b). 在子输入框，true，选中列表中的 useDesktopClient，然后回车，完成设置  
+   MAC:
    ![](static/set.png)
+   WIN:
+   ![WIN](static/win.png)
    
 3. 使用关键词 ns ，在子输入框输入要查询的内容，按下 Enter 键，就可以执行搜索了, 如下图
    ![](static/search.png)
@@ -35,4 +38,4 @@
 ### Todo
 
 - [ ] Linux 兼容；
-- [ ] Win 桌面应用打开页面；
+- [x] Win 桌面应用打开页面；
