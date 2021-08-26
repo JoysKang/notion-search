@@ -18,7 +18,7 @@
    MAC:
    ![](static/set.png)
    WIN:
-   ![WIN](static/win.png)
+   ![](static/win.png)
    
 3. 使用关键词 ns ，在子输入框输入要查询的内容，按下 Enter 键，就可以执行搜索了, 如下图
    ![](static/search.png)
@@ -37,5 +37,5 @@
 
 ### Todo
 
-- [ ] Linux 兼容；
+- [ ] Linux 兼容(等待官方升级utools到2.0后)；
 - [x] Win 桌面应用打开页面；
