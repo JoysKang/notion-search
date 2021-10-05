@@ -85,7 +85,7 @@ async function search(searchWord) {
             "accept": "*/*",
             "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7",
             "content-type": "application/json",
-            "notion-client-version": "23.9.0.36",
+            "notion-client-version": "23.10.7.0",
             "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"90\", \"Google Chrome\";v=\"90\"",
             "sec-ch-ua-mobile": "?0",
             "sec-fetch-dest": "empty",
