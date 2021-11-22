@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@notionhq/client": "^0.4.3",
     "emoji-unicode": "^2.0.1",
     "node-fetch": "^2.6.1"
   }

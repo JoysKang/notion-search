@@ -2,6 +2,7 @@ const {configs} = require("./config");
 const fetch = require('node-fetch');
 const {exec} = require("child_process");
 const emojiUnicode = require("emoji-unicode")
+const { Client } = require("@notionhq/client")
 
 let input = ""  // setting 时，记录用户输入的值
 let deepCopyConfigs = JSON.parse(JSON.stringify(configs))
@@ -85,20 +86,25 @@ async function search(searchWord) {
             "accept": "*/*",
             "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7",
             "content-type": "application/json",
-            "notion-client-version": "23.10.7.0",
-            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"90\", \"Google Chrome\";v=\"90\"",
+            "notion-client-version": "23.10.14.12",
+            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Google Chrome\";v=\"96\"",
             "sec-ch-ua-mobile": "?0",
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
             "x-notion-active-user-header": "5071bdc3-8e9f-4ced-9e43-ea5909735a72",
-            "cookie": cookie
+            "cookie": cookie,
+            "Referrer-Policy": "same-origin"
         },
         "body": "{\"type\":\"BlocksInSpace\",\"query\":\"" + searchWord + "\",\"spaceId\":\"" + spaceId + "\",\"limit\":9,\"filters\":{\"isDeletedOnly\":false,\"excludeTemplates\":false,\"isNavigableOnly\":false,\"requireEditPermissions\":false,\"ancestors\":[],\"createdBy\":[],\"editedBy\":[],\"lastEditedTime\":{},\"createdTime\":{}},\"sort\":\"Relevance\",\"source\":\"quick_find\"}",
-        "method": "POST",
-        "mode": "cors"
+        "method": "POST"
     });
+
     let jsonData = await response.json()
+    if (jsonData.trackEventProperties.searchExperiments['search-no-wildcard-for-non-cjk'] !== 'on') {
+        utools.showNotification("cookie 已过期，请重新获取");
+        return [];
+    }
     // console.timeEnd('test2')
     const results = jsonData.results
     const recordMap = jsonData.recordMap
@@ -150,7 +156,57 @@ async function search(searchWord) {
             link: ''
         })
     }
-    // console.log(searchResult, "///")
+    console.log(searchResult, "///")
+    return searchResult
+}
+
+
+// 使用 Oauth2 授权码发送搜索请求（和页面搜索差距不较大，不够准确，暂不启用）
+async function searchByToken(searchWord) {
+    return []
+    const oauth2Token = utools.dbStorage.getItem("oauth2Token")
+
+    const searchResult = []
+    const notion = new Client({ auth: oauth2Token })
+
+    const response = await notion.search({
+        query: searchWord,
+        sort: {
+            direction: 'ascending',
+            timestamp: 'last_edited_time',
+        },
+    });
+    console.log(JSON.stringify(response));
+
+    for (let i = 0; i < response.results.length; i++) {
+        const item = response.results[i]
+        let icon = item.icon ? item.icon[item.icon.type] : ""
+        if (icon.length && isEmojiCharacter(icon)) {
+            icon = "emojiicons/" + emojiUnicode(icon) + ".png"
+        } else {
+            icon = "static/icon.png"
+        }
+
+        searchResult.push({
+            "title": item.properties.title.title[0].plain_text,
+            "description": "",
+            "icon": icon,
+            "parent_id": "",
+            "link": "https://www.notion.so/" + item.id.replaceAll("-", ""),
+            "id": item.id
+        })
+    }
+
+    if (searchResult.length === 0) {
+        searchResult.push({
+            title: '未查找到匹配项',
+            description: '请更换关键词后再查找',
+            icon:'emojiicons/1f62f.png',
+            id: '',
+            link: ''
+        })
+    }
+    console.log(searchResult, "///")
     return searchResult
 }
 
@@ -160,21 +216,25 @@ let NSet = {
     args: {
         enter: (action, callbackSetList) => {
             // 读取数据库的值，没有则返回默认值
+            const oauth2Token = utools.dbStorage.getItem("oauth2Token")
+            if (oauth2Token && oauth2Token.length) {
+                deepCopyConfigs[0].description = oauth2Token
+            }
             const cookie = utools.dbStorage.getItem("cookie")
             if (cookie && cookie.length) {
-                deepCopyConfigs[0].description = cookie
+                deepCopyConfigs[1].description = cookie
             }
             const spaceId = utools.dbStorage.getItem("spaceId")
             if (spaceId && spaceId.length) {
-                deepCopyConfigs[1].description = spaceId
+                deepCopyConfigs[2].description = spaceId
             }
             const useDesktopClient = utools.dbStorage.getItem("useDesktopClient")
             if (useDesktopClient && useDesktopClient.length) {
-                deepCopyConfigs[2].description = useDesktopClient
+                deepCopyConfigs[3].description = useDesktopClient
             }
             const notionPathWin = utools.dbStorage.getItem("notionPathWin")
             if (notionPathWin && notionPathWin.length) {
-                deepCopyConfigs[3].description = notionPathWin
+                deepCopyConfigs[4].description = notionPathWin
             }
 
             if (utools.isMacOs() === true) {
@@ -237,7 +297,13 @@ let NS = {
             if (itemData.icon === "logo.png") { // 搜索
                 callbackSetList([]);
                 // console.time('test1')
-                const searchResult = await search(itemData.title)
+                let searchResult = []
+                // if (utools.dbStorage.getItem("oauth2Token")) {
+                //     searchResult = await searchByToken(itemData.title)
+                // } else {
+                //     searchResult = await search(itemData.title)
+                // }
+                searchResult = await search(itemData.title)
                 // console.timeEnd('test1')
                 callbackSetList(searchResult);
                 return;

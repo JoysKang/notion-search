@@ -1,5 +1,11 @@
 const configs = [
     {
+        "title": "oauth2Token",
+        "description": 'oauth2Token 未配置',
+        "icon":'',
+        "system": 5 // 1 mac 2 win 3 linux 4 all 5 未开启
+    },
+    {
         "title": "cookie",
         "description": 'cookie 未配置',
         "icon":'',
