@@ -163,7 +163,6 @@ async function search(searchWord) {
 
 // 使用 Oauth2 授权码发送搜索请求（和页面搜索差距不较大，不够准确，暂不启用）
 async function searchByToken(searchWord) {
-    return []
     const oauth2Token = utools.dbStorage.getItem("oauth2Token")
 
     const searchResult = []
@@ -171,22 +170,35 @@ async function searchByToken(searchWord) {
 
     const response = await notion.search({
         query: searchWord,
+        filters: {
+            "isDeletedOnly": false,
+            "excludeTemplates": false,
+            "isNavigableOnly": false,
+            "requireEditPermissions": false,
+            "ancestors": [],
+            "createdBy": [],
+            "editedBy": [],
+            "lastEditedTime": {},
+            "createdTime": {}
+        },
         sort: {
             direction: 'ascending',
             timestamp: 'last_edited_time',
         },
     });
-    console.log(JSON.stringify(response));
 
     for (let i = 0; i < response.results.length; i++) {
         const item = response.results[i]
+        if (!item.properties.title) {
+            continue
+        }
+
         let icon = item.icon ? item.icon[item.icon.type] : ""
         if (icon.length && isEmojiCharacter(icon)) {
             icon = "emojiicons/" + emojiUnicode(icon) + ".png"
         } else {
             icon = "static/icon.png"
         }
-
         searchResult.push({
             "title": item.properties.title.title[0].plain_text,
             "description": "",
@@ -206,7 +218,6 @@ async function searchByToken(searchWord) {
             link: ''
         })
     }
-    console.log(searchResult, "///")
     return searchResult
 }
 
@@ -298,12 +309,13 @@ let NS = {
                 callbackSetList([]);
                 // console.time('test1')
                 let searchResult = []
-                // if (utools.dbStorage.getItem("oauth2Token")) {
-                //     searchResult = await searchByToken(itemData.title)
-                // } else {
-                //     searchResult = await search(itemData.title)
-                // }
-                searchResult = await search(itemData.title)
+                if (utools.dbStorage.getItem("oauth2Token")) {
+                    console.log("000000")
+                    searchResult = await searchByToken(itemData.title)
+                } else {
+                    searchResult = await search(itemData.title)
+                }
+                // searchResult = await search(itemData.title)
                 // console.timeEnd('test1')
                 callbackSetList(searchResult);
                 return;
