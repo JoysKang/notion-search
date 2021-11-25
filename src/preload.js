@@ -80,27 +80,47 @@ async function search(searchWord) {
         return [];
     }
 
-    // console.time('test2')
-    const response = await fetch("https://www.notion.so/api/v3/search", {
-        "headers": {
-            "accept": "*/*",
-            "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7",
-            "content-type": "application/json",
-            "notion-client-version": "23.10.14.12",
-            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Google Chrome\";v=\"96\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "x-notion-active-user-header": "5071bdc3-8e9f-4ced-9e43-ea5909735a72",
-            "cookie": cookie,
-            "Referrer-Policy": "same-origin"
-        },
-        "body": "{\"type\":\"BlocksInSpace\",\"query\":\"" + searchWord + "\",\"spaceId\":\"" + spaceId + "\",\"limit\":9,\"filters\":{\"isDeletedOnly\":false,\"excludeTemplates\":false,\"isNavigableOnly\":false,\"requireEditPermissions\":false,\"ancestors\":[],\"createdBy\":[],\"editedBy\":[],\"lastEditedTime\":{},\"createdTime\":{}},\"sort\":\"Relevance\",\"source\":\"quick_find\"}",
-        "method": "POST"
-    });
+    let myHeaders = new Headers();
+    myHeaders.append('Cookie', cookie);
+    myHeaders.append('Content-Type', 'application/json');
+    myHeaders.append('notion-client-version', '23.10.14.13');
 
-    let jsonData = await response.json()
+    const raw = {
+        type: 'BlocksInSpace',
+        query: searchWord,
+        spaceId: spaceId,
+        limit: 9,
+        filters: {
+            isDeletedOnly: false,
+            excludeTemplates: false,
+            isNavigableOnly: false,
+            requireEditPermissions: false,
+            ancestors: [],
+            createdBy: [],
+            editedBy: [],
+            lastEditedTime: {},
+            createdTime: {},
+        },
+        sort: 'Relevance',
+        source: 'quick_find',
+    };
+
+    const requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: JSON.stringify(raw),
+        redirect: 'follow',
+    };
+    let jsonData = '';
+    await fetch('https://www.notion.so/api/v3/search', requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+            jsonData = data;
+        }).catch((error) => {
+            console.log('error', error);
+            utools.showNotification("搜索失败" + error);
+        });
+
     if (jsonData.trackEventProperties.searchExperiments['search-no-wildcard-for-non-cjk'] !== 'on') {
         utools.showNotification("cookie 已过期，请重新获取");
         return [];
@@ -156,7 +176,6 @@ async function search(searchWord) {
             link: ''
         })
     }
-    console.log(searchResult, "///")
     return searchResult
 }
 
@@ -308,14 +327,14 @@ let NS = {
             if (itemData.icon === "logo.png") { // 搜索
                 callbackSetList([]);
                 // console.time('test1')
-                let searchResult = []
-                if (utools.dbStorage.getItem("oauth2Token")) {
-                    console.log("000000")
-                    searchResult = await searchByToken(itemData.title)
-                } else {
-                    searchResult = await search(itemData.title)
-                }
-                // searchResult = await search(itemData.title)
+                // let searchResult = []
+                // if (utools.dbStorage.getItem("oauth2Token")) {
+                //     console.log("000000")
+                //     searchResult = await searchByToken(itemData.title)
+                // } else {
+                //     searchResult = await search(itemData.title)
+                // }
+                const searchResult = await search(itemData.title)
                 // console.timeEnd('test1')
                 callbackSetList(searchResult);
                 return;
